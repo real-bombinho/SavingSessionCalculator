@@ -51,8 +51,9 @@ type
     SavingSessionDays: TStringList;
     SavingSessionEvent: RSavingSessionEvent;
     procedure fillDates(const value: tDateTime);
-    procedure pullData;
-    procedure fillIDA(const values: TStrings);
+    function pullData: boolean;
+    procedure fillIDA(const Values: TStrings);
+    procedure unhandledFault(const AValue: string);
   public
 
   end;
@@ -221,9 +222,10 @@ begin
   IDAslots := TEventSlots.Create(6, 11);
   SSslots := TEventSlots.Create(8, 11);
   ProgressBar1.Visible := false;
+  CheckBox1.Checked := false;
 end;
 
-procedure TForm1.PullData;
+function TForm1.pullData: boolean;
 var o: TOctopus;
     r: RResponse;
     i, c, pagesBetween: integer;
@@ -231,10 +233,32 @@ var o: TOctopus;
     firstStart, lastNeeded: tDateTime;
     ConsumptionData: array of RConsumption;
 begin
-  o := TOctopus.Create(edit1.Text, SouthernScotland, '');
+  result := false;
+  if pos('sk_live_', edit1.Text) <> 1 then
+  begin
+    showmessage('Invalid API key - stopped');
+    exit;
+  end;
+  if length(edit2.Text) <> 13 then
+  begin
+    showmessage('MPAN seems invalid - stopped');
+    exit;
+  end;
+  if length(edit3.Text) <> 10 then
+  begin
+    showmessage('Meter serial seems invalid - stopped');
+    exit;
+  end;
+  o := TOctopus.Create(edit1.Text, SouthernScotland, '');      // region is not used here
   url := OctopusURL + '/v1/electricity-meter-points/' + edit2.Text + '/meters/' +
    edit3.Text + '/consumption/';
-  o.fetch(url);
+  try
+    o.fetch(url);
+  except
+    unhandledFault(OctopusFault + #10 + #13 + #10 + #13 +
+      'Please check your entries - stopped');
+    exit;
+  end;
   progressbar1.Position := 10;
   Application.ProcessMessages;
   sleep(5);
@@ -252,7 +276,13 @@ begin
   end
   else
   begin
-    o.fetch(url + '?page=' + inttostr(pagesBetween));
+    try
+      o.fetch(url + '?page=' + inttostr(pagesBetween));
+    except
+      unhandledFault(OctopusFault + #10 + #13 + #10 + #13 +
+        'check the saving session date - stopped');
+      exit;
+    end;
     r.parse(o.LastResponse);
     memo1.Lines := r.results;
   end;
@@ -263,7 +293,12 @@ begin
   repeat
   progressbar1.Position := progressbar1.Position + 2;
   Application.ProcessMessages;
-  o.fetch(r.next);
+  try
+    o.fetch(r.next);
+  except
+    unhandledFault(OctopusFault + ' - stopped');
+    exit;
+  end;
   progressbar1.Position := 8 + progressbar1.Position;
   r.parse(o.LastResponse);
   memo1.Lines.AddStrings(r.results);
@@ -273,7 +308,7 @@ begin
 
   fillIDA(memo1.Lines);
   progressbar1.Visible := false;
-
+  result := true;
 end;
 
 procedure TForm1.fillIDA(const Values: TStrings);
@@ -347,6 +382,20 @@ begin
   //stringGrid2.Cells[6, 13] := currtostr(UsageAverage);
   //stringGrid2.Cells[1, 13] := 'Saving';
   //stringGrid2.Cells[2, 13] := currtostr(UsageAverage - usage + IDAAverage);
+end;
+
+procedure TForm1.unhandledFault(const AValue: string);
+var i, j: integer;
+begin
+  memo1.Clear;
+  for i := 1 to stringGrid1.ColCount do
+    for j := 1 to stringGrid1.RowCount do;
+  stringGrid1.Cells[i, j] := '';
+  for i := 1 to stringGrid2.ColCount do
+    for j := 1 to stringGrid2.RowCount do;
+  stringGrid2.Cells[i, j] := '';
+  Edit4.Text := '';
+  showmessage(AValue);
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);

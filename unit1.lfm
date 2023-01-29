@@ -1,0 +1,411 @@
+object Form1: TForm1
+  Left = 421
+  Height = 788
+  Top = 254
+  Width = 1701
+  ActiveControl = ListBox1
+  Caption = 'Octopus Saving Session Calculator'
+  ClientHeight = 788
+  ClientWidth = 1701
+  OnCreate = FormCreate
+  PopupMode = pmExplicit
+  Position = poDefault
+  LCLVersion = '2.2.4.0'
+  object StringGrid1: TStringGrid
+    Left = 352
+    Height = 344
+    Top = 56
+    Width = 592
+    ColCount = 9
+    Columns = <    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taCenter
+        Title.Caption = 'Period 1'
+        Width = 64
+      end    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taCenter
+        Title.Caption = 'Period 2'
+        Width = 64
+      end    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taCenter
+        Title.Caption = 'Period 3'
+        Width = 64
+      end    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taCenter
+        Title.Caption = 'Period 4'
+        Width = 64
+      end    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taCenter
+        Title.Caption = 'Period 5'
+        Width = 64
+      end    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taCenter
+        Title.Caption = 'Period 6'
+        Width = 64
+      end    
+      item
+        Title.Caption = ''
+        Width = 10
+      end    
+      item
+        Alignment = taRightJustify
+        Font.Style = [fsBold]
+        Title.Alignment = taRightJustify
+        Title.Font.Style = [fsBold]
+        Title.Caption = 'Total'
+        Width = 73
+      end>
+    RowCount = 14
+    ScrollBars = ssVertical
+    TabOrder = 0
+    ColWidths = (
+      108
+      64
+      64
+      64
+      64
+      64
+      64
+      10
+      73
+    )
+    Cells = (
+      12
+      0
+      1
+      'Saving Session'
+      0
+      3
+      'Day 1'
+      0
+      4
+      'Day 2'
+      0
+      5
+      'Day 3'
+      0
+      6
+      'Day 4'
+      0
+      7
+      'Day 5'
+      0
+      8
+      'Day 6'
+      0
+      9
+      'Day 7'
+      0
+      10
+      'Day 8'
+      0
+      11
+      'Day 9'
+      0
+      12
+      'Day 10'
+      1
+      0
+      'Period 1'
+    )
+  end
+  object Label1: TLabel
+    Left = 352
+    Height = 17
+    Top = 32
+    Width = 232
+    Caption = 'Intra Day Adjustment (IDA) data'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object ListBox1: TListBox
+    Left = 32
+    Height = 200
+    Top = 114
+    Width = 113
+    ItemHeight = 0
+    OnClick = ListBox1Click
+    ScrollWidth = 111
+    TabOrder = 1
+    TopIndex = -1
+  end
+  object Edit1: TEdit
+    Left = 33
+    Height = 27
+    Top = 56
+    Width = 300
+    TabOrder = 2
+  end
+  object Label2: TLabel
+    Left = 35
+    Height = 17
+    Top = 32
+    Width = 49
+    Caption = 'API key'
+    ParentColor = False
+  end
+  object Label3: TLabel
+    Left = 35
+    Height = 17
+    Top = 91
+    Width = 104
+    Caption = 'Saving Sessions'
+    ParentColor = False
+  end
+  object Memo1: TMemo
+    Left = 968
+    Height = 720
+    Top = 56
+    Width = 712
+    Lines.Strings = (
+      'Memo1'
+    )
+    OnChange = Memo1Change
+    ScrollBars = ssAutoVertical
+    TabOrder = 3
+  end
+  object Edit2: TEdit
+    Left = 161
+    Height = 27
+    Top = 114
+    Width = 169
+    TabOrder = 4
+  end
+  object Label4: TLabel
+    Left = 165
+    Height = 17
+    Top = 93
+    Width = 42
+    Caption = 'MPAN'
+    ParentColor = False
+  end
+  object Edit3: TEdit
+    Left = 161
+    Height = 27
+    Top = 175
+    Width = 169
+    TabOrder = 5
+  end
+  object Label5: TLabel
+    Left = 165
+    Height = 17
+    Top = 154
+    Width = 104
+    Caption = 'Meter serial No'
+    ParentColor = False
+  end
+  object CheckBox1: TCheckBox
+    Left = 163
+    Height = 24
+    Top = 223
+    Width = 109
+    Caption = 'show Values'
+    Checked = True
+    OnClick = CheckBox1Click
+    State = cbChecked
+    TabOrder = 6
+  end
+  object ProgressBar1: TProgressBar
+    Left = 426
+    Height = 33
+    Hint = 'Loading data.'
+    Top = 176
+    Width = 383
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 7
+  end
+  object StringGrid2: TStringGrid
+    Left = 224
+    Height = 344
+    Top = 432
+    Width = 720
+    ColCount = 11
+    Columns = <    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taCenter
+        Title.Caption = 'Period 1'
+        Width = 64
+      end    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taCenter
+        Title.Caption = 'Period 2'
+        Width = 64
+      end    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taCenter
+        Title.Caption = 'Period 3'
+        Width = 64
+      end    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taCenter
+        Title.Caption = 'Period 4'
+        Width = 64
+      end    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taCenter
+        Title.Caption = 'Period 5'
+        Width = 64
+      end    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taCenter
+        Title.Caption = 'Period 6'
+        Width = 64
+      end    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taRightJustify
+        Title.Caption = 'Period 7'
+        Width = 64
+      end    
+      item
+        Alignment = taRightJustify
+        Title.Alignment = taRightJustify
+        Title.Caption = 'Period 8'
+        Width = 64
+      end    
+      item
+        Title.Caption = ''
+        Width = 10
+      end    
+      item
+        Alignment = taRightJustify
+        Font.Style = [fsBold]
+        Title.Alignment = taRightJustify
+        Title.Font.Style = [fsBold]
+        Title.Caption = 'Total'
+        Width = 72
+      end>
+    RowCount = 14
+    ScrollBars = ssVertical
+    TabOrder = 8
+    ColWidths = (
+      112
+      64
+      64
+      64
+      64
+      64
+      64
+      64
+      64
+      10
+      72
+    )
+    Cells = (
+      11
+      0
+      1
+      'Saving Session'
+      0
+      3
+      'Day 1'
+      0
+      4
+      'Day 2'
+      0
+      5
+      'Day 3'
+      0
+      6
+      'Day 4'
+      0
+      7
+      'Day 5'
+      0
+      8
+      'Day 6'
+      0
+      9
+      'Day 7'
+      0
+      10
+      'Day 8'
+      0
+      11
+      'Day 9'
+      0
+      12
+      'Day 10'
+    )
+  end
+  object Label6: TLabel
+    Left = 224
+    Height = 17
+    Top = 408
+    Width = 278
+    Caption = 'Usage during Saving Session time slots'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label7: TLabel
+    Left = 33
+    Height = 17
+    Top = 408
+    Width = 47
+    Caption = 'Saving'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object Edit4: TEdit
+    Left = 33
+    Height = 27
+    Top = 432
+    Width = 95
+    Alignment = taRightJustify
+    Font.Style = [fsBold]
+    ParentFont = False
+    ReadOnly = True
+    TabOrder = 9
+  end
+  object Label8: TLabel
+    Left = 128
+    Height = 17
+    Top = 440
+    Width = 32
+    Caption = 'kWh'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object CSVDataset1: TCSVDataset
+    FileName = '/home/selber/Documents/Projects/OctopusSavingsSession/sessions.csv'
+    FieldDefs = <>
+    ReadOnly = True
+    CSVOptions.FirstLineAsFieldNames = False
+    CSVOptions.DefaultFieldLength = 255
+    CSVOptions.Delimiter = ','
+    CSVOptions.QuoteChar = '"'
+    CSVOptions.LineEnding = #10
+    CSVOptions.IgnoreOuterWhitespace = False
+    CSVOptions.QuoteOuterWhitespace = True
+    Left = 656
+    Top = 8
+  end
+  object PascalTZ1: TPascalTZ
+    DatabasePath = '.'
+    DetectInvalidLocalTimes = True
+    Left = 704
+    Top = 8
+  end
+end

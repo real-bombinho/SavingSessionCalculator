@@ -15,6 +15,7 @@ const
   OctopusTariff2 = 'AGILE-22-08-31';
   OctopusTariff3 = 'AGILE-VAR-22-10-19';
   OctopusTariff4 = 'AGILE-FLEX-22-11-25';
+  OctopusFault = 'Uh Oh - Something went wrong.';
 
 const
   EasternEngland = 'A';
