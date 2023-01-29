@@ -232,8 +232,10 @@ var o: TOctopus;
     s, url: string;
     firstStart, lastNeeded: tDateTime;
     ConsumptionData: array of RConsumption;
+    results: TStringlist;
 begin
   result := false;
+  results := TStringList.Create;
   if pos('sk_live_', edit1.Text) <> 1 then
   begin
     showmessage('Invalid API key - stopped');
@@ -257,22 +259,23 @@ begin
   except
     unhandledFault(OctopusFault + #10 + #13 + #10 + #13 +
       'Please check your entries - stopped');
+    results.Free;
     exit;
   end;
   progressbar1.Position := 10;
   Application.ProcessMessages;
   sleep(5);
 //  memo1.Text := o.LastResponse;
-  r.parse(o.LastResponse);
-  c := r.results.Count;
-  i := pos('"interval_start":"', r.results[0]);
-  s := r.results.Strings[0].Substring(i + 17, 20);
+  r.parse(o.LastResponse, results);
+  c := results.Count;
+  i := pos('"interval_start":"', results[0]);
+  s := results.Strings[0].Substring(i + 17, 20);
   if parse.parseDate(s, firstStart) then ;
   pagesBetween := hoursBetween(SavingSessionEvent.From, firstStart) * 2 div c;
   //showmessage(inttostr(pagesbetween));
   if pagesBetween = 0 then
   begin
-    memo1.Lines := r.results;
+    memo1.Lines := results;
   end
   else
   begin
@@ -280,11 +283,13 @@ begin
       o.fetch(url + '?page=' + inttostr(pagesBetween));
     except
       unhandledFault(OctopusFault + #10 + #13 + #10 + #13 +
-        'check the saving session date - stopped');
+        'check the saving session date - stopped' + #10 + #13 +
+        'Response - ' + o.ResponseText);
+      results.Free;
       exit;
     end;
-    r.parse(o.LastResponse);
-    memo1.Lines := r.results;
+    r.parse(o.LastResponse, results);
+    memo1.Lines := results;
   end;
 
   lastNeeded := IDAslots.DateTime[0, 10];
@@ -296,12 +301,14 @@ begin
   try
     o.fetch(r.next);
   except
-    unhandledFault(OctopusFault + ' - stopped');
+    unhandledFault(OctopusFault + ' - stopped' + #10 + #13 +
+        'Response - ' + o.ResponseText);
+    results.Free;
     exit;
   end;
   progressbar1.Position := 8 + progressbar1.Position;
-  r.parse(o.LastResponse);
-  memo1.Lines.AddStrings(r.results);
+  r.parse(o.LastResponse, results);
+  memo1.Lines.AddStrings(results);
   consumptionData[0].Line := memo1.Lines[memo1.Lines.Count - 1];
   until consumptionData[0].From < lastNeeded;
   o.Free;
@@ -309,6 +316,7 @@ begin
   fillIDA(memo1.Lines);
   progressbar1.Visible := false;
   result := true;
+  results.Free;
 end;
 
 procedure TForm1.fillIDA(const Values: TStrings);
@@ -388,12 +396,10 @@ procedure TForm1.unhandledFault(const AValue: string);
 var i, j: integer;
 begin
   memo1.Clear;
-  for i := 1 to stringGrid1.ColCount do
-    for j := 1 to stringGrid1.RowCount do;
-  stringGrid1.Cells[i, j] := '';
-  for i := 1 to stringGrid2.ColCount do
-    for j := 1 to stringGrid2.RowCount do;
-  stringGrid2.Cells[i, j] := '';
+  for i := 0 to stringGrid1.ColCount - 1 do
+    stringgrid1.Cols[i].Clear;
+  for i := 0 to stringGrid2.ColCount - 1 do
+    stringgrid2.Cols[i].Clear;
   Edit4.Text := '';
   showmessage(AValue);
 end;

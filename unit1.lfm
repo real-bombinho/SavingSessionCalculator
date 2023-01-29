@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 421
+  Left = 450
   Height = 788
-  Top = 254
+  Top = 351
   Width = 1701
   ActiveControl = ListBox1
   Caption = 'Octopus Saving Session Calculator'

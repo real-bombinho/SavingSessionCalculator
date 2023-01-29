@@ -50,11 +50,10 @@ type
     count: longint;
     next: string;
     prior: string;
-    results: TStringList;
-    function parse(const value: string): boolean;
+    function parse(const value: string; const List: TStrings): boolean;
   end;
 
-function ParseLine(const Line: String; List: TStrings; const Separator: String;
+function ParseLine(const Line: String; const List: TStrings; const Separator: String;
   const Clear: boolean = false): boolean;
 function UTCString(const value: tDateTime): string;
 function parseDate(const value: string; out target: TDateTime; IsUTC: boolean = true): boolean;
@@ -94,10 +93,10 @@ begin
   result := result.Replace('.', 'z"');
 end;
 
-function ParseLine(const Line: String; List: TStrings; const Separator: String;
+function ParseLine(const Line: String; const List: TStrings; const Separator: String;
   const Clear: boolean = false): boolean;
 var x, y: integer;
-    s, sLine: AnsiString;
+    s, sLine: AnsiString;    Listt: TstringList;
     //EolOrComment: integer;
 begin
   sLine := AnsiLowercase(Line);
@@ -109,6 +108,8 @@ begin
   end
   else
     result := true;
+  Listt := TStringList.Create;
+  Listt.Clear;
   if Clear then List.Clear;
   while (x < length(sLine)) do
   begin                                         // parse string at Separator
@@ -187,33 +188,34 @@ end;
 
 { RResponse }
 
-function RResponse.parse(const value: string): boolean;
+function RResponse.parse(const value: string; const List: TStrings): boolean;
 var f, t: integer;
     p: pchar;
 begin
-  if results = nil then
-    results := TStringList.Create;
-  parseLine(value, results, '{', true);
-  f := pos('"count":', results[0]) + 8;
-  t := pos(',',  results[0]);
+  if not assigned(List) then
+    raise exception.Create('StringList "List" not initialised');
+  parseLine(value, List, '{', true);
+  f := pos('"count":', List[0]) + 8;
+  t := pos(',',  List[0]);
   if (f > 9) or (t < f) then raise exception.Create('Unexpected format, "count" in unexpected location');
-  count := strtoint(copy(results[0], f, t - f ));
+  count := strtoint(List[0].Substring(f - 1, t-f));//copy(results[0], f, t - f ));
+
   //if count <> length(value) then raise exception.create('Unexpected length of ' + inttostr(count) + ', expected ' + inttostr(length(value)));
-  results[0] := copy(results[0], t + 1, length(results[0]) - t);
-  f := pos('"next":"', results[0]) + 8;
-  t := pos(',',  results[0]);
-  next := copy(results[0], f, t - f - 1);
-  results[0] := copy(results[0], t + 1, length(results[0]) - t);
-  if pos('"previous":null', results[0]) <> 0 then
+  List[0] := copy(List[0], t + 1, length(List[0]) - t);
+  f := pos('"next":"', List[0]) + 8;
+  t := pos(',',  List[0]);
+  next := copy(List[0], f, t - f - 1);
+  List[0] := copy(List[0], t + 1, length(List[0]) - t);
+  if pos('"previous":null', List[0]) <> 0 then
     prior := ''
   else
   begin
-    f := pos('"previous":', results[0]) + 11;
-    t := pos(',',  results[0]);
-    p := Pchar(copy(results[0], f, t - f));
+    f := pos('"previous":', List[0]) + 11;
+    t := pos(',',  List[0]);
+    p := Pchar(copy(List[0], f, t - f));
     prior := AnsiExtractQuotedStr(p, '"');
   end;
-  results.Delete(0);
+  List.Delete(0);
 end;
 
 initialization

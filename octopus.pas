@@ -69,7 +69,7 @@ const
     FData: array of array of REventSlot;
   private
     FSlotsInUse: integer;
-    function GetData(const col, row: integer): REventSlot;
+    FFrom, FTill: tDateTime;
     function GetDateTime(const col, row: integer): tDateTime;
     function GetDateStr(const col, row: integer): string;
     function GetDateTimeStr(const col, row: integer): string;
@@ -79,7 +79,6 @@ const
     procedure SetUsage(const col, row: integer; AValue: currency);
     function outOfBounds(const col, row: integer): boolean;
   public
-    property Data[const col, row: integer]: REventSlot read GetData;
     property DateTime[const col, row: integer]: tDateTime read GetDateTime write SetDateTime;
     property DateStr[const col, row: integer]: string read GetDateStr;
     property DateTimeStr[const col, row: integer]: string read GetDateTimeStr;
@@ -166,12 +165,6 @@ const WaitIfFailed = 5;
 
 { TEventSlots }
 
-function TEventSlots.GetData(const col, row: integer): REventSlot;
-begin
-  if not outOfBounds(col, row) then
-    result := FData[col, row];
-end;
-
 function TEventSlots.GetDateTime(const col, row: integer): tDateTime;
 begin
   if not outOfBounds(col, row) then
@@ -211,7 +204,13 @@ end;
 procedure TEventSlots.SetDateTime(const col, row: integer; AValue: tDateTime);
 begin
   if not outOfBounds(col, row) then
+  begin
     FData[col, row].dateTime := AValue;
+    if FFrom > AValue then
+      FFrom := AValue;
+    if FTill < AValue then
+      FTill := AValue;
+  end;
 end;
 
 procedure TEventSlots.SetUsage(const col, row: integer; AValue: currency);
@@ -242,6 +241,8 @@ begin
     for r := low(FData[c]) to high(FData[c]) do
       FData[c, r].Clear;
   FSlotsInUse := 0;
+  FFrom := 0;
+  FTill := 0;
 end;
 
 procedure TEventSlots.setConsecutiveTimeslots(const row: integer;
@@ -259,6 +260,10 @@ begin
       t := incMinute(t, 30);
     end;
   end;
+  if FData[0, row].dateTime < FFrom then
+    FFrom := FData[0, row].dateTime;
+  if FData[count - 1, row].dateTime > FTill then
+      FTill := FData[count - 1, row].dateTime;
 end;
 
 function TEventSlots.RoundToNearest(ADateTime, RoundTo: TDateTime): TdateTime;
@@ -291,6 +296,8 @@ var i, j: integer;
 begin
   result := false;
   t := RoundToNearest(ADateTime, roundTo);
+  if (t > RoundToNearest(FTill, roundTo)) then exit;
+  if (t < RoundToNearest(FFrom, roundTo)) then exit;
   for i := 0 to FSlotsInUse - 1 do
     for j := 0 to high(FData[i]) do
       if t = RoundToNearest(FData[i, j].dateTime, roundTo) then
