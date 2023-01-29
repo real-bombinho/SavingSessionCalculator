@@ -5,7 +5,7 @@ unit Unit1;
 interface
 
 uses
-  Classes, SysUtils, IdHTTP, uPascalTZ, Forms, Controls, Graphics, Dialogs,
+  Classes, SysUtils, IdHTTP, Forms, Controls, Graphics, Dialogs,
   Grids, StdCtrls, DBGrids, ComCtrls, DateUtils, Octopus, parse, csvdataset, db;
 
 type
