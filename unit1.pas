@@ -31,7 +31,6 @@ type
     Label8: TLabel;
     ListBox1: TListBox;
     Memo1: TMemo;
-    PascalTZ1: TPascalTZ;
     ProgressBar1: TProgressBar;
     StringGrid1: TStringGrid;
     StringGrid2: TStringGrid;
