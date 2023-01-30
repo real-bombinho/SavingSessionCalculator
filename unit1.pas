@@ -220,6 +220,12 @@ begin
   SSslots := TEventSlots.Create(8, 11);
   ProgressBar1.Visible := false;
   CheckBox1.Checked := false;
+  if paramcount > 0 then
+    edit1.Text := paramstr(1);
+  if paramcount > 1 then
+    edit2.Text := paramstr(2);
+  if paramcount > 2 then
+    edit3.Text := paramstr(3);   
 end;
 
 function TForm1.pullData: boolean;
