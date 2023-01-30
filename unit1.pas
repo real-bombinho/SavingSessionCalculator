@@ -379,7 +379,10 @@ begin
   end;
   UsageAverage := sum / 10 / SavingSessionEvent.Slots;
   stringGrid2.Cells[0, 13] := 'Slot Saving';
-  savingTotal := IDA * SavingSessionEvent.Slots;
+  if IDA > 0 then
+    savingTotal := IDA * SavingSessionEvent.Slots
+  else
+    savingTotal := 0;  
   for i := 1 to SavingSessionEvent.Slots do
   begin
     stringGrid2.Cells[i, 13] := currToStr(((SSslots.columnUsage(i - 1) -
