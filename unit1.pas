@@ -6,11 +6,9 @@ interface
 
 uses
   Classes, SysUtils, IdHTTP, Forms, Controls, Graphics, Dialogs,
-  Grids, StdCtrls, DBGrids, ComCtrls, DateUtils, Octopus, parse, csvdataset, db;
+  Grids, StdCtrls, DBGrids, ComCtrls, DateUtils, Octopus, parse, csvdataset;
 
 type
-
-  AEventSlots = array[1..8, 0..10] of REventSlot;
 
   { TForm1 }
 
@@ -320,15 +318,15 @@ end;
 
 procedure TForm1.fillIDA(const Values: TStrings);
 var ConsumptionData: array of RConsumption;
-    i, pagesBetween: integer;
+    i: integer;
     total, sum: currency;
     ind: RIndex;
 begin
   Application.ProcessMessages;
-  setlength(consumptionData, memo1.lines.Count);
+  setlength(consumptionData, Values.Count);
   i := 0;
-  repeat //memo1.Lines.Count -1 do
-    consumptionData[i].Line := memo1.Lines[i];
+  repeat
+    consumptionData[i].Line := Values[i];
     //showmessage(datetimetostr(consumptionData[i].From) + ' : ' + datetimetostr(IDAslots.DateTime[0,0]));
     if IDAslots.findIndex(consumptionData[i].From, ind, encodeTime(0, 30, 0, 0)) then
     begin
@@ -347,7 +345,7 @@ begin
         stringGrid2.Cells[ind.col + 1, ind.row + 2] := currtostr(consumptionData[i].Consumption);
     end;
     inc(i);
-  until (i >= memo1.Lines.Count);
+  until (i >= Values.Count);
   sum := 0;
   for i := 1 to 10 do
   begin
@@ -392,7 +390,7 @@ begin
 end;
 
 procedure TForm1.unhandledFault(const AValue: string);
-var i, j: integer;
+var i: integer;
 begin
   memo1.Clear;
   for i := 0 to stringGrid1.ColCount - 1 do
