@@ -46,7 +46,7 @@ type
     IDA: currency;
     SavingTotal: currency;
     SavingSessionDays: TStringList;
-    SavingSessionEvent: RSavingSessionEvent;
+    SavingSessionEvent: REvent;
     procedure fillDates(const value: tDateTime);
     function pullData: boolean;
     procedure fillIDA(const Values: TStrings);
@@ -102,7 +102,7 @@ begin
     raise exception.Create('date is not a saving session');
   IDAslots.Clear;
   SSslots.Clear;
-  SSslots.setConsecutiveTimeslots(0, SavingSessionEvent.From, SavingSessionEvent.Slots);
+  SSslots.setConsecutiveTimeslots(0, SavingSessionEvent);
   IDASlots.setConsecutiveTimeslots(0, incMinute(SavingSessionEvent.From, -240), 6);
   d := 1;
   i := 1;
@@ -225,7 +225,8 @@ begin
   if paramcount > 1 then
     edit2.Text := paramstr(2);
   if paramcount > 2 then
-    edit3.Text := paramstr(3);   
+    edit3.Text := paramstr(3);
+  SavingSessionEvent.RoundTo := encodeTime(0, 30, 0, 0);
 end;
 
 function TForm1.pullData: boolean;
@@ -382,7 +383,7 @@ begin
   if IDA > 0 then
     savingTotal := IDA * SavingSessionEvent.Slots
   else
-    savingTotal := 0;  
+    savingTotal := 0;
   for i := 1 to SavingSessionEvent.Slots do
   begin
     stringGrid2.Cells[i, 13] := currToStr(((SSslots.columnUsage(i - 1) -
@@ -432,4 +433,3 @@ begin
 end;
 
 end.
-
