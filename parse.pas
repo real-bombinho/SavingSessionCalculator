@@ -223,4 +223,3 @@ initialization
 LLondon := TBundledTimeZone.GetTimeZone('Europe/London');
 
 end.
-
