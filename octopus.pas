@@ -62,6 +62,27 @@ const
     usage: currency;
   end;
 
+  { REvent }
+
+   REvent = record         // calculations in setters
+   private
+     FRoundTo: TDateTime;
+     FSlots: integer;
+     FFrom: tDateTime;
+     FTill: tDateTime;
+     FFromO: tDateTime;    // keep original
+     FTillO: tDateTime;    // keep original
+     function getSlots: integer;
+     procedure SetFrom(AValue: TDateTime);
+     procedure SetRoundTo(AValue: TDateTime);
+     procedure SetTill(AValue: TDateTime);
+   public
+     property RoundTo: TDateTime read FRoundTo write SetRoundTo;
+     property From: TDateTime read FFrom write SetFrom;
+     property Till: TDateTime read FTill write SetTill;
+     property Slots: integer read FSlots;
+   end;
+
    { TEventSlots }
 
   TEventSlots = class
@@ -86,7 +107,8 @@ const
     property Usage[const col, row: integer]: currency read GetUsage write SetUsage;
     procedure Clear;
     procedure setConsecutiveTimeslots(const row: integer; const firstColumn: tDatetime;
-      const count: integer);
+      const count: integer); overload;
+    procedure setConsecutiveTimeslots(const row: integer; const AEvent: REvent); overload;
     function RoundToNearest(ADateTime, RoundTo:TDateTime):TdateTime;
     function rowUsage(const row: integer): currency;
     function columnUsage(const col: integer): currency;
@@ -94,22 +116,6 @@ const
       const roundTo: tDateTime): boolean;
     constructor Create(const cols, rows: integer);
   end;
-
-  { RSavingSessionEvent }
-
-   RSavingSessionEvent = record
-   private
-     FSlots: integer;
-     FFrom: tDateTime;
-     FTill: tDateTime;
-     function getSlots: integer;
-     procedure SetFrom(AValue: TDateTime);
-     procedure SetTill(AValue: TDateTime);
-   public
-     property From: TDateTime read FFrom write SetFrom;
-     property Till: TDateTime read FTill write SetTill;
-     property Slots: integer read FSlots;
-   end;
 
   RRegion = record
   private
@@ -260,10 +266,31 @@ begin
       t := incMinute(t, 30);
     end;
   end;
-  if FData[0, row].dateTime < FFrom then
-    FFrom := FData[0, row].dateTime;
+  if firstColumn < FFrom then
+    FFrom := firstColumn;
   if FData[count - 1, row].dateTime > FTill then
       FTill := FData[count - 1, row].dateTime;
+end;
+
+procedure TEventSlots.setConsecutiveTimeslots(const row: integer;
+  const AEvent: REvent);
+var c: integer;
+    t: TDateTime;
+begin
+  t := AEvent.From;
+  if FSlotsInUse < AEvent.Slots then FSlotsInUse := AEvent.Slots;
+  for c := 0 to AEvent.Slots - 1 do
+  begin
+    if not outOfBounds(c, row) then
+    begin
+      FData[c, row].dateTime := t;
+      t := incMinute(t, 30);
+    end;
+  end;
+  if AEvent.From < FFrom then
+    FFrom := AEvent.From;
+  if FData[AEvent.Slots - 1, row].dateTime > FTill then
+      FTill := FData[AEvent.Slots - 1, row].dateTime;
 end;
 
 function TEventSlots.RoundToNearest(ADateTime, RoundTo: TDateTime): TdateTime;
@@ -326,9 +353,9 @@ begin
   usage := 0;
 end;
 
-{ RSavingSessionEvent }
+{ REvent }
 
-function RSavingSessionEvent.getSlots: integer;
+function REvent.getSlots: integer;
 var i: integer;
 begin
   i := minutesBetween(From, incMinute(Till, -1));
@@ -336,20 +363,41 @@ begin
   if i mod 30 > 0 then inc(result);
 end;
 
-procedure RSavingSessionEvent.SetFrom(AValue: TDateTime);
+procedure REvent.SetFrom(AValue: TDateTime);
 begin
   if FFrom = AValue then Exit;
-  FFrom := AValue;
+  FFromO := AValue;
+  if FRoundTo <> 0 then
+    FFrom := Round(FFromO / RoundTo) * RoundTo
+  else
+    FFrom := AValue;
   if FTill <> 0 then
     FSlots := getSlots;
+
 end;
 
-procedure RSavingSessionEvent.SetTill(AValue: TDateTime);
+procedure REvent.SetRoundTo(AValue: TDateTime);
+begin
+  if FRoundTo = AValue then Exit;
+  FRoundTo := AValue;
+  if FRoundTo <> 0 then
+  begin
+    FFrom := Round(FFromO / RoundTo) * RoundTo;
+    FTill := Round(FTillO / RoundTo) * RoundTo;
+  end;
+end;
+
+procedure REvent.SetTill(AValue: TDateTime);
 begin
   if FTill = AValue then Exit;
-  FTill := AValue;
+  FTillO := AValue;
+  if FRoundTo <> 0 then
+    FTill := Round(FTillO / RoundTo) * RoundTo
+  else
+    FTill := AValue;
   if FFrom <> 0 then
     FSlots := getSlots;
+
 end;
 
 { TOctopus }
