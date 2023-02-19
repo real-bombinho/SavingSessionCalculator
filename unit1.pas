@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, IdHTTP, Forms, Controls, Graphics, Dialogs,
-  Grids, StdCtrls, DBGrids, ComCtrls, DateUtils, Octopus, parse, csvdataset;
+  Grids, StdCtrls, DBGrids, ComCtrls, DateUtils, Octopus, parse, csvdataset, Sessions;
 
 type
 
@@ -19,6 +19,7 @@ type
     Edit2: TEdit;
     Edit3: TEdit;
     Edit4: TEdit;
+    Edit5: TEdit;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -27,6 +28,7 @@ type
     Label6: TLabel;
     Label7: TLabel;
     Label8: TLabel;
+    Label9: TLabel;
     ListBox1: TListBox;
     Memo1: TMemo;
     ProgressBar1: TProgressBar;
@@ -36,8 +38,8 @@ type
     procedure CheckBox1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ListBox1Click(Sender: TObject);
-    procedure Memo1Change(Sender: TObject);
   private
+    FLastClick: tDateTime;
     IDAslots: TEventSlots;
     SSslots: TEventSlots;
     IDAaverage: currency;
@@ -47,6 +49,8 @@ type
     SavingTotal: currency;
     SavingSessionDays: TStringList;
     SavingSessionEvent: REvent;
+    SavingSessionPointsPerkWh: integer;
+    Sessions: TSessions;
     procedure fillDates(const value: tDateTime);
     function pullData: boolean;
     procedure fillIDA(const Values: TStrings);
@@ -67,30 +71,46 @@ implementation
 function isSavingSession(const value: tDateTime; const setTimes: boolean = false): integer;
 begin
   result := -1;
-  Form1.CSVDataset1.First;
-  if Form1.CSVDataset1.Fields[0].AsString <> 'Date' then
-    showmessage('Check csv file format')
+  if Form1.Sessions.isEmpty then
+  begin
+    Form1.CSVDataset1.First;
+    if Form1.CSVDataset1.Fields[0].AsString <> 'Date' then
+      showmessage('Check csv file format')
+    else
+    begin
+      Form1.CSVDataset1.Next;
+      repeat
+        if Form1.CSVDataset1.Fields[0].AsDateTime = trunc(value) then
+        begin
+          result := Form1.CSVDataset1.RecNo;
+          if setTimes then
+          begin
+            Form1.SavingSessionEvent.From := Form1.CSVDataset1.Fields[1].AsDateTime + trunc(value);
+            Form1.SavingSessionEvent.Till := Form1.CSVDataset1.Fields[2].AsDateTime + trunc(value);
+            Form1.SavingSessionPointsPerkWh := Form1.CSVDataset1.Fields[3].AsInteger;
+          end;
+          Form1.CSVDataset1.Last;
+        end;
+        Form1.CSVDataset1.Next;
+      until Form1.CSVDataset1.EOF;
+    end;
+
+  end
   else
   begin
-    Form1.CSVDataset1.Next;
-    repeat
-      if Form1.CSVDataset1.Fields[0].AsDateTime = trunc(value) then
-      begin
-        result := Form1.CSVDataset1.RecNo;
-        if setTimes then
-        begin
-          Form1.SavingSessionEvent.From := Form1.CSVDataset1.Fields[1].AsDateTime + trunc(value);
-          Form1.SavingSessionEvent.Till := Form1.CSVDataset1.Fields[2].AsDateTime + trunc(value);
-        end;
-        Form1.CSVDataset1.Last;
-      end;
-      Form1.CSVDataset1.Next;
-    until Form1.CSVDataset1.EOF;
+    result := Form1.Sessions.isEvent(value);
+    if setTimes and (result <> -1) then
+    begin
+      Form1.SavingSessionEvent.From := Form1.Sessions.From[result];
+      Form1.SavingSessionEvent.Till := Form1.Sessions.Till[result];
+      Form1.SavingSessionPointsPerkWh := Form1.Sessions.PointsPerUnit[result];
+    end;
   end;
   if (result = -1) and setTimes then
   begin
     Form1.SavingSessionEvent.From := 0;
     Form1.SavingSessionEvent.Till := 0;
+    Form1.SavingSessionPointsPerkWh := 0;
   end;
 end;
 
@@ -181,6 +201,8 @@ end;
 
 procedure TForm1.ListBox1Click(Sender: TObject);
 begin
+  if secondsBetween(now, FLastClick) < 2 then exit;
+  FLastClick := now;
   progressbar1.Position := 0;
   progressbar1.Visible := true;
   Application.ProcessMessages;
@@ -190,32 +212,35 @@ begin
   progressbar1.Visible := false;
 end;
 
-procedure TForm1.Memo1Change(Sender: TObject);
-begin
-
-end;
-
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   DefaultFormatSettings.ShortDateFormat := 'dd/mm/yyyy';
   DefaultFormatSettings.LongTimeFormat := 'hh:mm';
   DefaultFormatSettings.DateSeparator := '/';
-  SavingSessionDays := TStringlist.Create;
-  SavingSessionDays.Clear;
+  ;
 
-  CSVDataSet1.LoadFromCSVFile('sessions.csv');
-  CSVDataset1.First;
-  if CSVDataset1.Fields[0].AsString <> 'Date' then
-    showmessage('Check csv file format')
+  Sessions := TSessions.Create('https://api.dudas.in/savingsessionjson.php');
+  memo1.Text := Sessions.Response;
+  if not Sessions.isEmpty then
+    Sessions.SavingSessionDays(Form1.ListBox1.Items)
   else
   begin
-    CSVDataset1.Next;
-    repeat
-      SavingSessionDays.Add(CSVDataset1.Fields[0].AsString);
+    SavingSessionDays := TStringlist.Create;
+    SavingSessionDays.Clear;
+    CSVDataSet1.LoadFromCSVFile('sessions.csv');
+    CSVDataset1.First;
+    if CSVDataset1.Fields[0].AsString <> 'Date' then
+      showmessage('Check csv file format')
+    else
+    begin
       CSVDataset1.Next;
-    until CSVDataset1.EOF;
+      repeat
+        SavingSessionDays.Add(CSVDataset1.Fields[0].AsString);
+        CSVDataset1.Next;
+      until CSVDataset1.EOF;
+    end;
+    Form1.ListBox1.Items := SavingSessionDays;
   end;
-  Form1.ListBox1.Items := SavingSessionDays;
   IDAslots := TEventSlots.Create(6, 11);
   SSslots := TEventSlots.Create(8, 11);
   ProgressBar1.Visible := false;
@@ -240,7 +265,7 @@ var o: TOctopus;
 begin
   result := false;
   results := TStringList.Create;
-  if pos('sk_live_', edit1.Text) <> 1 then
+  if pos('sk_live_', edit1.Text) <> 1 then                     // start of plausibility check for inputs
   begin
     showmessage('Invalid API key - stopped');
     exit;
@@ -258,7 +283,7 @@ begin
   o := TOctopus.Create(edit1.Text, SouthernScotland, '');      // region is not used here
   url := OctopusURL + '/v1/electricity-meter-points/' + edit2.Text + '/meters/' +
    edit3.Text + '/consumption/';
-  try
+  try                                                          // get latest consumption data
     o.fetch(url);
   except
     unhandledFault(OctopusFault + #10 + #13 + #10 + #13 +
@@ -278,11 +303,11 @@ begin
   pagesBetween := hoursBetween(SavingSessionEvent.From, firstStart) * 2 div c;
   //showmessage(inttostr(pagesbetween));
   if pagesBetween = 0 then
-  begin
+  begin                                                        // use fetched data if relevant
     memo1.Lines := results;
   end
   else
-  begin
+  begin                                                        // discard and fetch first relevant page
     try
       o.fetch(url + '?page=' + inttostr(pagesBetween));
     except
@@ -299,7 +324,7 @@ begin
   lastNeeded := IDAslots.DateTime[0, 10];
 //  showmessage(IDAslots.dateTimeStr[0, 9]);
   setlength(consumptionData, 1);
-  repeat
+  repeat                                                       // continue to fetch required data
   progressbar1.Position := progressbar1.Position + 2;
   Application.ProcessMessages;
   try
@@ -393,10 +418,8 @@ begin
   end;
   stringGrid2.Cells[10, 13] := currtostr(sum);
   Edit4.text := currtostr(savingTotal);
-  //stringGrid2.Cells[5, 13] := 'Average';
-  //stringGrid2.Cells[6, 13] := currtostr(UsageAverage);
-  //stringGrid2.Cells[1, 13] := 'Saving';
-  //stringGrid2.Cells[2, 13] := currtostr(UsageAverage - usage + IDAAverage);
+  i := round(savingTotal * SavingSessionPointsPerkWh) div 8;
+  Edit5.Text := inttostr(8 * i);
 end;
 
 procedure TForm1.unhandledFault(const AValue: string);
@@ -433,3 +456,4 @@ begin
 end;
 
 end.
+

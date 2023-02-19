@@ -1,9 +1,9 @@
 object Form1: TForm1
-  Left = 450
+  Left = 203
   Height = 788
-  Top = 351
+  Top = 192
   Width = 1701
-  ActiveControl = ListBox1
+  ActiveControl = Edit1
   Caption = 'Octopus Saving Session Calculator'
   ClientHeight = 788
   ClientWidth = 1701
@@ -124,8 +124,8 @@ object Form1: TForm1
     Left = 352
     Height = 17
     Top = 32
-    Width = 232
-    Caption = 'Intra Day Adjustment (IDA) data'
+    Width = 295
+    Caption = 'Intra Day Adjustment (IDA) data (in kWh)'
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
@@ -172,7 +172,6 @@ object Form1: TForm1
     Lines.Strings = (
       'Memo1'
     )
-    OnChange = Memo1Change
     ScrollBars = ssAutoVertical
     TabOrder = 3
   end
@@ -351,8 +350,8 @@ object Form1: TForm1
     Left = 224
     Height = 17
     Top = 408
-    Width = 278
-    Caption = 'Usage during Saving Session time slots'
+    Width = 341
+    Caption = 'Usage during Saving Session time slots (in kWh)'
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
@@ -387,6 +386,27 @@ object Form1: TForm1
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
+  end
+  object Label9: TLabel
+    Left = 35
+    Height = 17
+    Top = 490
+    Width = 45
+    Caption = 'Points'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object Edit5: TEdit
+    Left = 35
+    Height = 27
+    Top = 512
+    Width = 103
+    Alignment = taRightJustify
+    Font.Style = [fsBold]
+    ParentFont = False
+    ReadOnly = True
+    TabOrder = 10
   end
   object CSVDataset1: TCSVDataset
     FileName = '/home/selber/Documents/Projects/OctopusSavingsSession/sessions.csv'

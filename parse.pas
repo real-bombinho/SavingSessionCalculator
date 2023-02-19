@@ -12,6 +12,17 @@ uses
 
 type
 
+  { REventSlot }
+
+  REventSlot = record
+  private
+
+  public
+    dateTime: tDateTime;
+    Usage: currency;
+    procedure Clear;
+  end;
+
   { REntry }
 
   REntry = record
@@ -33,7 +44,6 @@ type
 
   RConsumption = record
   private
-    FLine: string;
     FConsumption: currency;
     FFrom, FTill: tDateTime;
     procedure setLine(AValue: string);
@@ -41,7 +51,8 @@ type
     property Consumption: currency read FConsumption;
     property From: TDateTime read FFrom;
     property Till: TDateTime read FTill;
-    property Line: string read FLine write setLine;
+    property Line: string write setLine;
+    procedure setValues(const AConsumption: currency; const AFrom, ATill: tDateTime);
   end;
 
   { RResponse }
@@ -56,15 +67,20 @@ type
 function ParseLine(const Line: String; const List: TStrings; const Separator: String;
   const Clear: boolean = false): boolean;
 function UTCString(const value: tDateTime): string;
+function LocalLondonTime(const unixTime: longint): tDateTime;
 function parseDate(const value: string; out target: TDateTime; IsUTC: boolean = true): boolean;
 
 implementation
 var LLondon: TBundledTimeZone;
 
+function LocalLondonTime(const unixTime: longint): tDateTime;
+begin
+  result := LLondon.ToLocalTime(UnixToDateTime(unixTime));
+end;
+
 function parseDate(const value: string; out target: TDateTime; IsUTC: boolean = true): boolean;
 var year, month, day: integer;
     hour, minute, seconds: integer;
-    s: string;
 begin
 //  "2022-10-28t13:00:00+01:00"
 //  "2022-10-30t07:00:00z"
@@ -84,19 +100,16 @@ begin
 end;
 
 function UTCString(const value: tDateTime): string;
-var utctime: tDateTime;
-    p: integer;
 begin
   result := lowercase(LLondon.ToISO8601Format(value));
   setLength(result, length(result) - 4);
-  p := pos('.', result);
   result := result.Replace('.', 'z"');
 end;
 
 function ParseLine(const Line: String; const List: TStrings; const Separator: String;
   const Clear: boolean = false): boolean;
 var x, y: integer;
-    s, sLine: AnsiString;    Listt: TstringList;
+    s, sLine: AnsiString;
     //EolOrComment: integer;
 begin
   sLine := AnsiLowercase(Line);
@@ -108,8 +121,6 @@ begin
   end
   else
     result := true;
-  Listt := TStringList.Create;
-  Listt.Clear;
   if Clear then List.Clear;
   while (x < length(sLine)) do
   begin                                         // parse string at Separator
@@ -122,24 +133,32 @@ begin
   end;
 end;
 
+{ REventSlot }
+
+procedure REventSlot.Clear;
+begin
+  dateTime := 0;
+  usage := 0;
+end;
+
 { RConsumption }
 
 procedure RConsumption.setLine(AValue: string);
 var sl: TStringlist;
     s: string;
-    i: integer;
 begin
   { "consumption":0.078,"interval_start":"2023-01-26t22:00:00z","interval_end":"2023-01-26t22:30:00z"}
-  FLine := lowerCase(AValue);
+  s := lowerCase(AValue);
   sl := TStringList.Create;
-  ParseLine(AValue, sl, ',');
+  ParseLine(s, sl, ',');
   if sl.Count <> 3 then
-    raise Exception.Create('TConsumption: invalid amount of arguments');
-  FLine := sl[0] + '|' + sl[1]  + '|' + sl[2];
-  for i:= 0 to 0 do
+    raise Exception.Create('RConsumption: invalid amount of arguments');
+  if Pos('"consumption"', sl[0]) <> 0 then
   begin
-    sl[i] := sl[i].Substring(pos(':', sl[i]));
-  end;
+    sl[0] := sl[0].Substring(pos(':', sl[0]));
+  end
+  else
+    raise exception.Create('Result does not contain "consumption"');
   FConsumption := strtocurr(sl[0]);
   if Pos('"interval_start"', sl[1]) <> 0 then
   begin
@@ -152,6 +171,19 @@ begin
     parseDate(s, FTill);
   end;
   sl.Free;
+end;
+
+procedure RConsumption.setValues(const AConsumption: currency; const AFrom,
+  ATill: tDateTime);
+begin
+  FConsumption := AConsumption;
+  if AFrom < ATill then
+  begin
+    FFrom := AFrom;
+    FTill := ATill;
+  end
+  else
+    raise exception.Create('Unexpected result From/Till');
 end;
 
 { REntry }
@@ -190,30 +222,29 @@ end;
 
 function RResponse.parse(const value: string; const List: TStrings): boolean;
 var f, t: integer;
-    p: pchar;
 begin
   if not assigned(List) then
     raise exception.Create('StringList "List" not initialised');
   parseLine(value, List, '{', true);
   f := pos('"count":', List[0]) + 8;
+  if f = 8 then raise exception.Create('Response header does not contain "count"');
   t := pos(',',  List[0]);
   if (f > 9) or (t < f) then raise exception.Create('Unexpected format, "count" in unexpected location');
   count := strtoint(List[0].Substring(f - 1, t-f));//copy(results[0], f, t - f ));
 
   //if count <> length(value) then raise exception.create('Unexpected length of ' + inttostr(count) + ', expected ' + inttostr(length(value)));
-  List[0] := copy(List[0], t + 1, length(List[0]) - t);
+  List[0] := List[0].Substring(t);
   f := pos('"next":"', List[0]) + 8;
   t := pos(',',  List[0]);
   next := copy(List[0], f, t - f - 1);
-  List[0] := copy(List[0], t + 1, length(List[0]) - t);
+  List[0] :=  List[0].Substring(t);
   if pos('"previous":null', List[0]) <> 0 then
     prior := ''
   else
   begin
     f := pos('"previous":', List[0]) + 11;
     t := pos(',',  List[0]);
-    p := Pchar(copy(List[0], f, t - f));
-    prior := AnsiExtractQuotedStr(p, '"');
+    prior := List[0].Substring(f, t - f - 2);
   end;
   List.Delete(0);
 end;
@@ -223,3 +254,4 @@ initialization
 LLondon := TBundledTimeZone.GetTimeZone('Europe/London');
 
 end.
+
