@@ -36,6 +36,7 @@ private
 const
   ErrorIndex = 'Invalid Index ';
   cFileName = 'sessions.csv';
+  CSVHeader = 'Date,Till,From,PointsPerkWh';
 var
   FSessions: array of PSession;
   FLastResponse: string;
@@ -59,7 +60,7 @@ public
   procedure SavingSessionDays(const dateList: TStrings);
   function isEvent(const EventDay: tDateTime): integer;
   function loadFromFile(const fileName: string): boolean;
-  function saveToFile(const fileName: string): boolean;
+  function saveToFile(const fileName: string = cFileName): boolean;
 end;
 
 implementation
@@ -254,7 +255,7 @@ begin
       readln(f, s);
       if i = 0 then
       begin
-        if lowercase(s) <> 'date,till,from,pointsperkwh' then
+        if CompareText(s, CSVHeader) <> 0 then
         raise Exception.Create('Unexpected header found in ' + fileName);
       end
       else

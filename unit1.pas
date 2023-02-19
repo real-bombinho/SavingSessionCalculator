@@ -33,7 +33,6 @@ type
     ProgressBar1: TProgressBar;
     StringGrid1: TStringGrid;
     StringGrid2: TStringGrid;
-    procedure Button2Click(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ListBox1Click(Sender: TObject);
@@ -129,11 +128,6 @@ begin
     for d := 1 to 13 do
       StringGrid2.Cells[i, d] := '';
   end;
-
-  //for i := 0 to 5 do
-  //  StringGrid1.Cells[i + 1, 1] := datetimetoStr(IDAslots.DateTime[i, 0], DefaultFormatSettings);
-  //for i := 0 to SavingSessionEvent.Slots - 1 do
-  //  StringGrid2.Cells[i + 1, 1] := timetoStr(SSslots.DateTime[i, 0], DefaultFormatSettings);
 end;
 
 function parseDate(value: string): TDatetime;
@@ -245,7 +239,6 @@ begin
   progressbar1.Position := 10;
   Application.ProcessMessages;
   sleep(5);
-//  memo1.Text := o.LastResponse;
   r.parse(o.LastResponse, results);
   c := results.Count;
   i := pos('"interval_start":"', results[0]);
@@ -273,7 +266,6 @@ begin
   end;
 
   lastNeeded := IDAslots.DateTime[0, 10];
-//  showmessage(IDAslots.dateTimeStr[0, 9]);
   setlength(consumptionData, 1);
   repeat                                                       // continue to fetch required data
   progressbar1.Position := progressbar1.Position + 2;
@@ -310,7 +302,6 @@ begin
   i := 0;
   repeat
     consumptionData[i].Line := Values[i];
-    //showmessage(datetimetostr(consumptionData[i].From) + ' : ' + datetimetostr(IDAslots.DateTime[0,0]));
     if IDAslots.findIndex(consumptionData[i].From, ind, encodeTime(0, 30, 0, 0)) then
     begin
       IDAslots.Usage[ind.col, ind.row] := consumptionData[i].Consumption;
@@ -383,11 +374,6 @@ begin
     stringgrid2.Cols[i].Clear;
   Edit4.Text := '';
   showmessage(AValue);
-end;
-
-procedure TForm1.Button2Click(Sender: TObject);
-begin
-  showmessage(UTCString(now()));
 end;
 
 procedure TForm1.CheckBox1Click(Sender: TObject);
