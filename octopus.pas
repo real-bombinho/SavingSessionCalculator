@@ -8,8 +8,7 @@ uses SysUtils, DateUtils, Classes;
 const
   OctopusURL = 'https://api.octopus.energy/';
   OctopusEndPoint = 'v1/products/';
-  OctopusUserAgent = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0) '+
-    'Gecko/20100101 Firefox/12.0';
+  OctopusUserAgent = 'SSCalculator';
   OctopusTariff = 'AGILE-18-02-21';
   OctopusTariff1 = 'AGILE-22-07-22';
   OctopusTariff2 = 'AGILE-22-08-31';
