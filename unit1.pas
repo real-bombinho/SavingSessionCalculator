@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, IdHTTP, Forms, Controls, Graphics, Dialogs,
-  Grids, StdCtrls, DBGrids, ComCtrls, DateUtils, Octopus, parse, csvdataset, Sessions;
+  Grids, StdCtrls, DBGrids, ComCtrls, DateUtils, Octopus, parse, Sessions;
 
 type
 
@@ -14,7 +14,6 @@ type
 
   TForm1 = class(TForm)
     CheckBox1: TCheckBox;
-    CSVDataset1: TCSVDataset;
     Edit1: TEdit;
     Edit2: TEdit;
     Edit3: TEdit;
@@ -47,7 +46,6 @@ type
     Usage: currency;
     IDA: currency;
     SavingTotal: currency;
-    SavingSessionDays: TStringList;
     SavingSessionEvent: REvent;
     SavingSessionPointsPerkWh: integer;
     Sessions: TSessions;
@@ -70,43 +68,15 @@ implementation
 
 function isSavingSession(const value: tDateTime; const setTimes: boolean = false): integer;
 begin
-  result := -1;
-  if Form1.Sessions.isEmpty then
+  result := Form1.Sessions.isEvent(value);
+  if setTimes then
+  if (result <> -1) then
   begin
-    Form1.CSVDataset1.First;
-    if Form1.CSVDataset1.Fields[0].AsString <> 'Date' then
-      showmessage('Check csv file format')
-    else
-    begin
-      Form1.CSVDataset1.Next;
-      repeat
-        if Form1.CSVDataset1.Fields[0].AsDateTime = trunc(value) then
-        begin
-          result := Form1.CSVDataset1.RecNo;
-          if setTimes then
-          begin
-            Form1.SavingSessionEvent.From := Form1.CSVDataset1.Fields[1].AsDateTime + trunc(value);
-            Form1.SavingSessionEvent.Till := Form1.CSVDataset1.Fields[2].AsDateTime + trunc(value);
-            Form1.SavingSessionPointsPerkWh := Form1.CSVDataset1.Fields[3].AsInteger;
-          end;
-          Form1.CSVDataset1.Last;
-        end;
-        Form1.CSVDataset1.Next;
-      until Form1.CSVDataset1.EOF;
-    end;
-
+    Form1.SavingSessionEvent.From := Form1.Sessions.From[result];
+    Form1.SavingSessionEvent.Till := Form1.Sessions.Till[result];
+    Form1.SavingSessionPointsPerkWh := Form1.Sessions.PointsPerUnit[result];
   end
   else
-  begin
-    result := Form1.Sessions.isEvent(value);
-    if setTimes and (result <> -1) then
-    begin
-      Form1.SavingSessionEvent.From := Form1.Sessions.From[result];
-      Form1.SavingSessionEvent.Till := Form1.Sessions.Till[result];
-      Form1.SavingSessionPointsPerkWh := Form1.Sessions.PointsPerUnit[result];
-    end;
-  end;
-  if (result = -1) and setTimes then
   begin
     Form1.SavingSessionEvent.From := 0;
     Form1.SavingSessionEvent.Till := 0;
@@ -217,30 +187,11 @@ begin
   DefaultFormatSettings.ShortDateFormat := 'dd/mm/yyyy';
   DefaultFormatSettings.LongTimeFormat := 'hh:mm';
   DefaultFormatSettings.DateSeparator := '/';
-  ;
 
   Sessions := TSessions.Create('https://api.dudas.in/savingsessionjson.php');
   memo1.Text := Sessions.Response;
   if not Sessions.isEmpty then
-    Sessions.SavingSessionDays(Form1.ListBox1.Items)
-  else
-  begin
-    SavingSessionDays := TStringlist.Create;
-    SavingSessionDays.Clear;
-    CSVDataSet1.LoadFromCSVFile('sessions.csv');
-    CSVDataset1.First;
-    if CSVDataset1.Fields[0].AsString <> 'Date' then
-      showmessage('Check csv file format')
-    else
-    begin
-      CSVDataset1.Next;
-      repeat
-        SavingSessionDays.Add(CSVDataset1.Fields[0].AsString);
-        CSVDataset1.Next;
-      until CSVDataset1.EOF;
-    end;
-    Form1.ListBox1.Items := SavingSessionDays;
-  end;
+    Sessions.SavingSessionDays(Form1.ListBox1.Items);
   IDAslots := TEventSlots.Create(6, 11);
   SSslots := TEventSlots.Create(8, 11);
   ProgressBar1.Visible := false;

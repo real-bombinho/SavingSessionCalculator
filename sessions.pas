@@ -26,12 +26,17 @@ type
     PointsPerUnit: integer;
     totalParticipants: longint;
     procedure parse(const AValue: string);
+    procedure parseCSV(const AValue: string);
   end;
 
 { TSessions }
 
 TSessions = class
 private
+const
+  ErrorIndex = 'Invalid Index ';
+  cFileName = 'sessions.csv';
+var
   FSessions: array of PSession;
   FLastResponse: string;
   FLastResponseCode: integer;
@@ -53,6 +58,8 @@ public
   property DateStr[Index: integer]: string read getDateStr;
   procedure SavingSessionDays(const dateList: TStrings);
   function isEvent(const EventDay: tDateTime): integer;
+  function loadFromFile(const fileName: string): boolean;
+  function saveToFile(const fileName: string): boolean;
 end;
 
 implementation
@@ -96,20 +103,37 @@ begin
     PointsPerUnit := strToIntDef(s, -1);
     if PointsPerUnit = -1 then raise exception.Create('Invalid points per unit');
   end;
-  if Pos('"totalParticipants"::', lowercase(sl[5])) <> 0 then
+  if Pos('"totalparticipants"::', lowercase(sl[5])) <> 0 then
   begin
     s := trim(sl[5].Substring(pos(':', sl[5]) + 1));
     totalParticipants := strToIntDef(s, -1);
-    if totalParticipants = -1 then raise exception.Create('Invalid participant count');
+    if totalParticipants = -1 then
+      raise exception.Create('Invalid participant count');
   end;
+  sl.Free;
+end;
+
+procedure PSession.parseCSV(const AValue: string);
+var sl: TStringlist;
+begin
+  // 15/11/2022,17:00,18:00,1800
+  sl := TStringList.Create;
+  ParseLine(AValue, sl, ',', true);
+  if sl.Count <> 4 then
+    raise exception.Create('Unexpected session list CSV format');
+  From := strToDate(sl[0]) + strToTime(sl[1]);
+  Till := strToDate(sl[0]) + strToTime(sl[2]);
+  PointsPerUnit := strToInt(sl[3]);
+  ID := 0;
+  Code := '';
+  totalParticipants := 0;
   sl.Free;
 end;
 
 { TSessions }
 
 function TSessions.fetch(const urlValue: string): boolean;
-var // Id_HandlerSocket : TIdSSLIOHandlerSocketOpenSSL;
-    IdHTTP1: TIdHTTP;
+var IdHTTP1: TIdHTTP;
     s: string;
     sl: TStringList;
     i: integer;
@@ -143,44 +167,45 @@ end;
 function TSessions.getDateStr(Index: integer): string;
 begin
   if (Index < 0) or (Index > High(FSessions)) then
-    raise Exception.Create('Invalid Index [DateStr]');
+    raise Exception.Create(ErrorIndex + '[DateStr]');
   result := datetostr(FSessions[Index].From);
 end;
 
 function TSessions.getFrom(Index: integer): tDateTime;
 begin
   if (Index < 0) or (Index > High(FSessions)) then
-    raise Exception.Create('Invalid Index [From]');
+    raise Exception.Create(ErrorIndex + '[From]');
   result := FSessions[Index].From;
 end;
 
 function TSessions.getPoints(Index: integer): integer;
 begin
   if (Index < 0) or (Index > High(FSessions)) then
-    raise Exception.Create('Invalid Index [PointsPerUnit]');
+    raise Exception.Create(ErrorIndex + '[PointsPerUnit]');
   result := FSessions[Index].PointsPerUnit;
 end;
 
 function TSessions.getTill(Index: integer): tDateTime;
 begin
   if (Index < 0) or (Index > High(FSessions)) then
-    raise Exception.Create('Invalid Index [Till]');
+    raise Exception.Create(ErrorIndex + '[Till]');
   result := FSessions[Index].Till;
 end;
 
 constructor TSessions.Create(const AURL: string);
 var i: integer;
 begin
-// https://api.dudas.in/savingsessionjson.php
   for i := 0 to 2 do
     if fetch(AURL) then break;
   if FLastResponseCode = 200 then
-  begin
-
-
-  end
   else
-    setLength(FSessions, 0);
+    if not loadFromFile('sessions.csv') then
+    begin
+      setLength(FSessions, 0);
+      raise Exception.Create('Fatal error:' + #10 +#13 +
+        'Session data not available from internet' + #10 +#13 +
+        'and file ' + cFileName + ' not found.');
+    end;
 end;
 
 function TSessions.isEmpty: boolean;
@@ -211,6 +236,64 @@ begin
       exit;
     end;
   result := -1;
+end;
+
+function TSessions.loadFromFile(const fileName: string): boolean;
+var i: integer;
+    f: TextFile;
+    s: string;
+begin
+  result := false;
+  AssignFile(f, fileName);
+  try
+    Reset(f);
+    setLength(FSessions, 0);
+    i := 0;
+    while not eof(f) do
+    begin
+      readln(f, s);
+      if i = 0 then
+      begin
+        if lowercase(s) <> 'date,till,from,pointsperkwh' then
+        raise Exception.Create('Unexpected header found in ' + fileName);
+      end
+      else
+      begin
+        setLength(FSessions, i);
+        FSessions[i - 1].parseCSV(s);
+      end;
+      inc(i);
+    end;
+    CloseFile(f);
+    result := true;
+  except
+    on E: EInOutError do
+    writeln('File reading error occurred. Details: ', E.ClassName, '/', E.Message);
+  end;
+
+end;
+
+function TSessions.saveToFile(const fileName: string): boolean;
+var i: integer;
+    f: TextFile;
+begin
+  result := false;
+  begin
+    AssignFile(f, fileName);
+    try
+      rewrite(f);
+      writeln(f, 'Date,Till,From,PointsPerkWh');
+      for i := low(FSessions) to high(FSessions) do
+      writeln(f, dateToStr(FSessions[i].From) + ',' + timeToStr(FSessions[i].From) +
+        ',' + timeToStr(FSessions[i].Till) + ',' + intToStr(FSessions[i].PointsPerUnit));
+      CloseFile(f);
+      result := true;
+    except
+      on E: EInOutError do
+        writeln('File writing error occurred. Details: ', E.ClassName, '/', E.Message);
+    end;
+  end;
+  if not fileExists(fileName) then result := false;
 end;
 
 end.

@@ -408,18 +408,4 @@ object Form1: TForm1
     ReadOnly = True
     TabOrder = 10
   end
-  object CSVDataset1: TCSVDataset
-    FileName = '/home/selber/Documents/Projects/OctopusSavingsSession/sessions.csv'
-    FieldDefs = <>
-    ReadOnly = True
-    CSVOptions.FirstLineAsFieldNames = False
-    CSVOptions.DefaultFieldLength = 255
-    CSVOptions.Delimiter = ','
-    CSVOptions.QuoteChar = '"'
-    CSVOptions.LineEnding = #10
-    CSVOptions.IgnoreOuterWhitespace = False
-    CSVOptions.QuoteOuterWhitespace = True
-    Left = 656
-    Top = 8
-  end
 end
