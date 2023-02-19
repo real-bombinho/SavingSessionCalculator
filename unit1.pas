@@ -35,6 +35,7 @@ type
     StringGrid1: TStringGrid;
     StringGrid2: TStringGrid;
     procedure CheckBox1Click(Sender: TObject);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure ListBox1Click(Sender: TObject);
   private
@@ -396,6 +397,13 @@ begin
     edit3.EchoMode := TEchoMode.emPassword;
   end;
 end;
+
+procedure TForm1.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+begin
+  Sessions.Free;
+  IDAslots.Free;
+  SSslots.Free;
+end;           
 
 end.
 
