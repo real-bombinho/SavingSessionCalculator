@@ -4,7 +4,6 @@ interface
 
 uses SysUtils, DateUtils, Classes;
 
-
 const
   OctopusURL = 'https://api.octopus.energy/';
   OctopusEndPoint = 'v1/products/';
