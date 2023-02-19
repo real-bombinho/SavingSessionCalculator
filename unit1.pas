@@ -20,6 +20,7 @@ type
     Edit4: TEdit;
     Edit5: TEdit;
     Label1: TLabel;
+    Label10: TLabel;
     Label2: TLabel;
     Label3: TLabel;
     Label4: TLabel;
@@ -177,6 +178,7 @@ begin
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
+var ls: TStrings;
 begin
   DefaultFormatSettings.ShortDateFormat := 'dd/mm/yyyy';
   DefaultFormatSettings.LongTimeFormat := 'hh:mm';
@@ -197,6 +199,9 @@ begin
   if paramcount > 2 then
     edit3.Text := paramstr(3);
   SavingSessionEvent.RoundTo := encodeTime(0, 30, 0, 0);
+  ls := Screen.Fonts;
+  if ls.IndexOf('Nimbus Sans L') = -1 then
+    Font.Name := 'Arial';
 end;
 
 function TForm1.pullData: boolean;

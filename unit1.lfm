@@ -1,19 +1,21 @@
 object Form1: TForm1
-  Left = 203
+  Left = 400
   Height = 788
-  Top = 192
+  Top = 203
   Width = 1701
   ActiveControl = Edit1
   Caption = 'Octopus Saving Session Calculator'
   ClientHeight = 788
   ClientWidth = 1701
+  Font.Height = 13
+  Font.Name = 'Nimbus Sans L'
   OnCreate = FormCreate
   PopupMode = pmExplicit
   Position = poDefault
   LCLVersion = '2.2.4.0'
   object StringGrid1: TStringGrid
     Left = 352
-    Height = 344
+    Height = 336
     Top = 56
     Width = 592
     ColCount = 9
@@ -133,10 +135,12 @@ object Form1: TForm1
   object ListBox1: TListBox
     Left = 32
     Height = 200
+    Hint = 'Click on date to calculate'
     Top = 114
     Width = 113
     ItemHeight = 0
     OnClick = ListBox1Click
+    ParentShowHint = False
     ScrollWidth = 111
     TabOrder = 1
     TopIndex = -1
@@ -152,7 +156,7 @@ object Form1: TForm1
     Left = 35
     Height = 17
     Top = 32
-    Width = 49
+    Width = 47
     Caption = 'API key'
     ParentColor = False
   end
@@ -160,7 +164,7 @@ object Form1: TForm1
     Left = 35
     Height = 17
     Top = 91
-    Width = 104
+    Width = 98
     Caption = 'Saving Sessions'
     ParentColor = False
   end
@@ -186,7 +190,7 @@ object Form1: TForm1
     Left = 165
     Height = 17
     Top = 93
-    Width = 42
+    Width = 38
     Caption = 'MPAN'
     ParentColor = False
   end
@@ -201,7 +205,7 @@ object Form1: TForm1
     Left = 165
     Height = 17
     Top = 154
-    Width = 104
+    Width = 88
     Caption = 'Meter serial No'
     ParentColor = False
   end
@@ -209,7 +213,7 @@ object Form1: TForm1
     Left = 163
     Height = 24
     Top = 223
-    Width = 109
+    Width = 100
     Caption = 'show Values'
     Checked = True
     OnClick = CheckBox1Click
@@ -228,7 +232,7 @@ object Form1: TForm1
   end
   object StringGrid2: TStringGrid
     Left = 224
-    Height = 344
+    Height = 336
     Top = 432
     Width = 720
     ColCount = 11
@@ -407,5 +411,13 @@ object Form1: TForm1
     ParentFont = False
     ReadOnly = True
     TabOrder = 10
+  end
+  object Label10: TLabel
+    Left = 35
+    Height = 34
+    Top = 323
+    Width = 121
+    Caption = 'Click at a date to get'#10'data and calculate'
+    ParentColor = False
   end
 end
