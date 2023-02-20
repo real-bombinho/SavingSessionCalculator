@@ -5,8 +5,8 @@ unit Unit1;
 interface
 
 uses
-  Classes, SysUtils, IdHTTP, Forms, Controls, Graphics, Dialogs,
-  Grids, StdCtrls, DBGrids, ComCtrls, DateUtils, Octopus, parse, Sessions;
+  Classes, SysUtils, IdHTTP, Forms, Controls, Dialogs,
+  Grids, StdCtrls, ComCtrls, DateUtils, Octopus, parse, Sessions;
 
 type
 
