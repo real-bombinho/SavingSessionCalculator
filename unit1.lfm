@@ -9,6 +9,7 @@ object Form1: TForm1
   ClientWidth = 1701
   Font.Height = 13
   Font.Name = 'Nimbus Sans L'
+  OnClose = FormClose
   OnCreate = FormCreate
   PopupMode = pmExplicit
   Position = poDefault
