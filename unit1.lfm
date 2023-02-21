@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 400
+  Left = 219
   Height = 788
-  Top = 203
+  Top = 182
   Width = 1701
   ActiveControl = Edit1
   Caption = 'Octopus Saving Session Calculator'
@@ -143,6 +143,7 @@ object Form1: TForm1
     OnClick = ListBox1Click
     ParentShowHint = False
     ScrollWidth = 111
+    ShowHint = True
     TabOrder = 1
     TopIndex = -1
   end
@@ -213,11 +214,14 @@ object Form1: TForm1
   object CheckBox1: TCheckBox
     Left = 163
     Height = 24
+    Hint = 'Hide or show personal data'
     Top = 223
     Width = 100
     Caption = 'show Values'
     Checked = True
     OnClick = CheckBox1Click
+    ParentShowHint = False
+    ShowHint = True
     State = cbChecked
     TabOrder = 6
   end
@@ -276,13 +280,13 @@ object Form1: TForm1
       end    
       item
         Alignment = taRightJustify
-        Title.Alignment = taRightJustify
+        Title.Alignment = taCenter
         Title.Caption = 'Period 7'
         Width = 64
       end    
       item
         Alignment = taRightJustify
-        Title.Alignment = taRightJustify
+        Title.Alignment = taCenter
         Title.Caption = 'Period 8'
         Width = 64
       end    
@@ -365,8 +369,10 @@ object Form1: TForm1
     Left = 33
     Height = 17
     Top = 408
-    Width = 47
+    Width = 48
     Caption = 'Saving'
+    Font.Height = -13
+    Font.Name = 'Sans'
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
@@ -405,12 +411,15 @@ object Form1: TForm1
   object Edit5: TEdit
     Left = 35
     Height = 27
+    Hint = 'Total points estimated'
     Top = 512
     Width = 103
     Alignment = taRightJustify
     Font.Style = [fsBold]
     ParentFont = False
+    ParentShowHint = False
     ReadOnly = True
+    ShowHint = True
     TabOrder = 10
   end
   object Label10: TLabel
@@ -420,5 +429,11 @@ object Form1: TForm1
     Width = 121
     Caption = 'Click at a date to get'#10'data and calculate'
     ParentColor = False
+  end
+  object Timer1: TTimer
+    Enabled = False
+    OnTimer = Timer1Timer
+    Left = 192
+    Top = 8
   end
 end

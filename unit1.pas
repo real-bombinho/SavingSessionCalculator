@@ -5,8 +5,8 @@ unit Unit1;
 interface
 
 uses
-  Classes, SysUtils, IdHTTP, Forms, Controls, Dialogs,
-  Grids, StdCtrls, ComCtrls, DateUtils, Octopus, parse, Sessions;
+  Classes, SysUtils, IdHTTP, Forms, Controls, Dialogs, Graphics,
+  Grids, StdCtrls, ComCtrls, DateUtils, Octopus, parse, Sessions, ExtCtrls;
 
 type
 
@@ -34,11 +34,14 @@ type
     ProgressBar1: TProgressBar;
     StringGrid1: TStringGrid;
     StringGrid2: TStringGrid;
+    Timer1: TTimer;
     procedure CheckBox1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure ListBox1Click(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
   private
+    BoldFont: TFont;
     FLastClick: tDateTime;
     IDAslots: TEventSlots;
     SSslots: TEventSlots;
@@ -50,6 +53,7 @@ type
     SavingSessionEvent: REvent;
     SavingSessionPointsPerkWh: integer;
     Sessions: TSessions;
+    procedure setFont;
     procedure fillDates(const value: tDateTime);
     function pullData: boolean;
     procedure fillIDA(const Values: TStrings);
@@ -156,7 +160,7 @@ begin
   result := strToDate(value);
   if dayOfWeek(result) in [1,7] then
   begin
-    showmessage(datetostr(result) + ' weekend');
+    showmessage(datetostr(result) + ' weekend, please implement');
   end
   else
   begin
@@ -178,17 +182,49 @@ begin
   progressbar1.Visible := false;
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TForm1.Timer1Timer(Sender: TObject);
+begin
+  Listbox1.TopIndex := ListBox1.Items.Count - 1;
+  Timer1.Enabled := false;
+end;
+
+procedure TForm1.setFont;
 var ls: TStrings;
+begin
+  BoldFont := TFont.Create;
+  BoldFont.Name := Font.Name;
+  BoldFont.Size := Font.Size;
+  BoldFont.Style := [fsBold];
+  BoldFont.Height := Font.Height;
+  ls := Screen.Fonts;
+  if ls.IndexOf('Arial') = -1 then
+  begin
+    Font.Name := 'Nimbus Sans L';
+    Font.Size := 10;
+  end
+  else
+  begin
+    Font.Name := 'Arial';
+    Font.Size := 9;
+  end;
+  Label8.Font := BoldFont;
+  StringGrid1.Columns[7].Font := BoldFont;
+  StringGrid1.Columns[7].Title.Font := BoldFont;
+  StringGrid2.Columns[9].Font := BoldFont;
+  StringGrid2.Columns[9].Title.Font := BoldFont;
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
 begin
   DefaultFormatSettings.ShortDateFormat := 'dd/mm/yyyy';
   DefaultFormatSettings.LongTimeFormat := 'hh:mm';
   DefaultFormatSettings.DateSeparator := '/';
-
   Sessions := TSessions.Create('https://api.dudas.in/savingsessionjson.php');
   memo1.Text := Sessions.Response;
   if not Sessions.isEmpty then
-    Sessions.SavingSessionDays(Form1.ListBox1.Items);
+    Sessions.SavingSessionDays(ListBox1.Items);
+  Listbox1.TopIndex := ListBox1.Items.Count - 1;
+  Timer1.Enabled := true;
   IDAslots := TEventSlots.Create(6, 11);
   SSslots := TEventSlots.Create(8, 11);
   ProgressBar1.Visible := false;
@@ -200,9 +236,7 @@ begin
   if paramcount > 2 then
     edit3.Text := paramstr(3);
   SavingSessionEvent.RoundTo := encodeTime(0, 30, 0, 0);
-  ls := Screen.Fonts;
-  if ls.IndexOf('Nimbus Sans L') = -1 then
-    Font.Name := 'Arial';
+  setFont;
 end;
 
 function TForm1.pullData: boolean;
@@ -403,7 +437,7 @@ begin
   Sessions.Free;
   IDAslots.Free;
   SSslots.Free;
-end;           
+end;
 
 end.
 

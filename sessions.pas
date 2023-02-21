@@ -43,13 +43,17 @@ var
   FLastResponseCode: integer;
   FLastResponseText: string;
   FLastFetched: tDateTime;
+  FCSVText: TStringList;
+  FCSVMD5: string;
   function fetch(const urlValue: string): boolean;
   function getDateStr(Index: integer): string;
   function getFrom(Index: integer): tDateTime;
   function getPoints(Index: integer): integer;
   function getTill(Index: integer): tDateTime;
+  function makeCSV: string;
 public
   constructor Create(const AURL: string);
+  destructor Destroy; override;
   function isEmpty: boolean;
   function Count: integer;
   property Response: string read FLastResponse;
@@ -59,13 +63,24 @@ public
   property DateStr[Index: integer]: string read getDateStr;
   procedure SavingSessionDays(const dateList: TStrings);
   function isEvent(const EventDay: tDateTime): integer;
+  function loadFromURL(const URL: string): boolean;
   function loadFromFile(const fileName: string): boolean;
   function saveToFile(const fileName: string = cFileName): boolean;
 end;
 
 implementation
 
-uses IdHTTP, DateUtils;
+uses IdHTTP, IdHashMessageDigest, DateUtils;
+
+function MD5String(str: String): String;
+begin
+  with TIdHashMessageDigest5.Create do
+    try
+      Result := HashStringAsHex(str);
+    finally
+      Free;
+    end;
+end;
 
 { PSession }
 
@@ -193,12 +208,22 @@ begin
   result := FSessions[Index].Till;
 end;
 
-constructor TSessions.Create(const AURL: string);
+function TSessions.makeCSV: string;
 var i: integer;
 begin
-  for i := 0 to 2 do
-    if fetch(AURL) then break;
-  if FLastResponseCode = 200 then
+  FCSVText.Clear;
+  FCSVText.Add('Date,Till,From,PointsPerkWh');
+  for i := low(FSessions) to high(FSessions) do
+    FCSVText.Add(dateToStr(FSessions[i].From) + ',' + timeToStr(FSessions[i].From) +
+      ',' + timeToStr(FSessions[i].Till) + ',' + intToStr(FSessions[i].PointsPerUnit));
+  result := MD5String(FCSVText.Text);
+end;
+
+constructor TSessions.Create(const AURL: string);
+begin
+  inherited Create;
+  FCSVText := TStringList.Create;
+  if LoadFromURL(AURL) then
   else
     if not loadFromFile('sessions.csv') then
     begin
@@ -207,6 +232,12 @@ begin
         'Session data not available from internet' + #10 +#13 +
         'and file ' + cFileName + ' not found.');
     end;
+end;
+
+destructor TSessions.Destroy;
+begin
+  inherited;
+  FCSVText.Free;
 end;
 
 function TSessions.isEmpty: boolean;
@@ -239,6 +270,14 @@ begin
   result := -1;
 end;
 
+function TSessions.loadFromURL(const URL: string): boolean;
+var i: integer;
+begin
+  for i := 0 to 2 do
+    if fetch(URL) then break;
+  result := FLastResponseCode = 200;
+end;
+
 function TSessions.loadFromFile(const fileName: string): boolean;
 var i: integer;
     f: TextFile;
@@ -249,29 +288,32 @@ begin
   try
     Reset(f);
     setLength(FSessions, 0);
+    FCSVText.Clear;
     i := 0;
     while not eof(f) do
     begin
       readln(f, s);
-      if i = 0 then
-      begin
-        if CompareText(s, CSVHeader) <> 0 then
-        raise Exception.Create('Unexpected header found in ' + fileName);
-      end
-      else
-      begin
-        setLength(FSessions, i);
-        FSessions[i - 1].parseCSV(s);
-      end;
+      FCSVText.Add(s);
       inc(i);
     end;
     CloseFile(f);
-    result := true;
   except
     on E: EInOutError do
-    writeln('File reading error occurred. Details: ', E.ClassName, '/', E.Message);
+      writeln('File reading error occurred. Details: ', E.ClassName, '/', E.Message);
   end;
-
+  if FCSVText.Count < 1 then
+    raise Exception.Create(fileName + ' seems to be empty');
+  if CompareText(FCSVText.Strings[0], CSVHeader) <> 0 then
+  begin
+    FCSVText.Clear;
+    raise Exception.Create('Unexpected header found in ' + fileName);
+  end
+  else
+    result := true;
+  setLength(FSessions, i - 1);
+  for i := low(FSessions) to high(FSessions) do
+    FSessions[i].parseCSV(FCSVText.Strings[i + 1]);
+  FCSVMD5 := MD5String(FCSVText.Text);
 end;
 
 function TSessions.saveToFile(const fileName: string): boolean;
@@ -279,14 +321,13 @@ var i: integer;
     f: TextFile;
 begin
   result := false;
+  FCSVMD5 := makeCSV;
   begin
     AssignFile(f, fileName);
     try
       rewrite(f);
-      writeln(f, 'Date,Till,From,PointsPerkWh');
-      for i := low(FSessions) to high(FSessions) do
-      writeln(f, dateToStr(FSessions[i].From) + ',' + timeToStr(FSessions[i].From) +
-        ',' + timeToStr(FSessions[i].Till) + ',' + intToStr(FSessions[i].PointsPerUnit));
+      for i := 0 to FCSVText.Count - 1 do
+        writeln(f, FCSVText.Strings[i]);
       CloseFile(f);
       result := true;
     except
