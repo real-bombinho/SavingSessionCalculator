@@ -437,6 +437,7 @@ begin
   Sessions.Free;
   IDAslots.Free;
   SSslots.Free;
+  BoldFont.Free;
 end;
 
 end.
