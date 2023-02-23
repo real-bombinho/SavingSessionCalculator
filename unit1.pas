@@ -108,13 +108,13 @@ begin
     StringGrid2.Cells[0, 1] := datetostr(value);
   while i <= 10 do
     begin
-      if dayOfWeek(value - d) in [1, 7] then
+      if (dayOfWeek(value - d) in [1, 7]) or
+        (isSavingSession(value - d) <> -1) then
       begin
         inc(d);
       end
       else
       begin
-        while isSavingSession(value - d) <> -1 do inc(d);
         StringGrid1.Cells[0,i + 2] := datetostr(value - d);
         StringGrid2.Cells[0,i + 2] := datetostr(value - d);
         IDAslots.setConsecutiveTimeslots(i, incMinute(SavingSessionEvent.From - d, -240), 6);
