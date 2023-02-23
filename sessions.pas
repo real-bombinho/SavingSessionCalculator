@@ -236,8 +236,8 @@ end;
 
 destructor TSessions.Destroy;
 begin
-  inherited;
   FCSVText.Free;
+  inherited;
 end;
 
 function TSessions.isEmpty: boolean;
