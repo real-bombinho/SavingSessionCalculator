@@ -400,7 +400,7 @@ begin
   end;
   stringGrid2.Cells[10, 13] := currtostr(sum);
   Edit4.text := currtostr(savingTotal);
-  i := round(savingTotal * SavingSessionPointsPerkWh) div 8;
+  i := 1 + round(savingTotal * SavingSessionPointsPerkWh) div 8;
   Edit5.Text := inttostr(8 * i);
 end;
 
