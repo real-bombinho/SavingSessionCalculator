@@ -78,14 +78,16 @@ begin
   result := LLondon.ToLocalTime(UnixToDateTime(unixTime));
 end;
 
-function parseDate(const value: string; out target: TDateTime; IsUTC: boolean = true): boolean;
+function parseDaten(const value: string; out target: TDateTime; IsUTC: boolean = true): boolean;
 var year, month, day: integer;
     hour, minute, seconds: integer;
+    suffix: integer;
+    suffixIdentifier: char;
 begin
-//  "2022-10-28t13:00:00+01:00"
+//  "2022-10-28t13:00:00+01:00" = "2022-10-28t12:00:00z"
 //  "2022-10-30t07:00:00z"
   result := false;
-  if (value[11] <> 't') or ((value[20] <> 'z') and (value[20] <> '+')) then
+  if (value[11] <> 't') or (not (value[20] in ['z', '+', '-'])) then
     raise Exception.Create('Unexpected chars detected. [' + value + ']');
   year := strToInt(value.Substring(0, 4));
   month := strToInt(value.Substring(5, 2));
@@ -93,6 +95,18 @@ begin
   hour := strToInt(value.Substring(11, 2));
   minute := strToInt(value.Substring(14, 2));
   seconds := strToInt(value.Substring(17, 2));
+  suffixIdentifier := value[20];
+  case suffixIdentifier of
+    '+': suffix := -1;
+    '-': suffix := 1;
+    'z': suffix := 0;
+    else raise Exception.Create('invalid character ' + suffixIdentifier );
+  end;
+  if suffix <> 0 then
+  begin
+    incHour(hour, suffix * strToInt(value.Substring(20, 2)));
+    incMinute(minute, suffix * strToInt(value.Substring(23, 2)));
+  end;
   target := EncodeDate(year, month, day) + EncodeTime(hour, minute, seconds, 0);
   if IsUTC then target := LLondon.ToLocalTime(target);
 //
