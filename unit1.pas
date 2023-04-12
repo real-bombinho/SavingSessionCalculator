@@ -282,7 +282,7 @@ begin
   r.parse(o.LastResponse, results);
   c := results.Count;
   i := pos('"interval_start":"', results[0]);
-  s := results.Strings[0].Substring(i + 17, 20);
+  s := results.Strings[0].Substring(i + 17);
   if parse.parseDate(s, firstStart) then ;
   pagesBetween := hoursBetween(SavingSessionEvent.From, firstStart) * 2 div c;
   //showmessage(inttostr(pagesbetween));
