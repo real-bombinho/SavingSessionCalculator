@@ -19,6 +19,7 @@ type
     Edit3: TEdit;
     Edit4: TEdit;
     Edit5: TEdit;
+    Edit6: TEdit;
     Label1: TLabel;
     Label10: TLabel;
     Label2: TLabel;
@@ -426,12 +427,14 @@ begin
     edit1.EchoMode := TEchoMode.emNormal;
     edit2.EchoMode := TEchoMode.emNormal;
     edit3.EchoMode := TEchoMode.emNormal;
+    edit6.EchoMode := TEchoMode.emNormal;
   end
   else
   begin
     edit1.EchoMode := TEchoMode.emPassword;
     edit2.EchoMode := TEchoMode.emPassword;
     edit3.EchoMode := TEchoMode.emPassword;
+    edit6.EchoMode := TEchoMode.emPassword;
   end;
 end;
 
