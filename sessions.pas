@@ -70,7 +70,7 @@ end;
 
 implementation
 
-uses IdHTTP, IdHashMessageDigest, DateUtils;
+uses IdHTTP, IdSSLOpenSSL, IdHashMessageDigest, DateUtils;
 
 function MD5String(str: String): String;
 begin
@@ -150,19 +150,27 @@ end;
 
 function TSessions.fetch(const urlValue: string): boolean;
 var IdHTTP1: TIdHTTP;
+    Id_HandlerSocket : TIdSSLIOHandlerSocketOpenSSL;
     s: string;
     sl: TStringList;
     i: integer;
 begin
   result := false;
   IdHTTP1 := TIdHTTP.Create(nil);
+  Id_HandlerSocket := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   try
+    Id_HandlerSocket.DefaultPort := 443;
+    Id_HandlerSocket.SSLOptions.Mode := sslmClient;
+    Id_HandlerSocket.SSLOptions.Method := sslvTLSv1_2;
+    Id_HandlerSocket.SSLOptions.SSLVersions := [sslvTLSv1_2];
+    idHTTP1.IOHandler := Id_HandlerSocket;
     IdHTTP1.Request.UserAgent := 'SSCalculator';
     IdHTTP1.HandleRedirects := true;
     s := IdHTTP1.Get(urlValue);
     FLastResponseCode := IdHTTP1.ResponseCode;
     FLastResponseText := IdHTTP1.ResponseText;
   finally
+    Id_HandlerSocket.Free;
     IdHTTP1.Free;
   end;
 
@@ -339,4 +347,5 @@ begin
 end;
 
 end.
+
 
