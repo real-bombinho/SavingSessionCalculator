@@ -373,7 +373,10 @@ begin
   stringGrid1.Cells[3, 13] := 'Average';
   stringGrid1.Cells[4, 13] := currtostr(IDAaverage);
   stringGrid1.Cells[0, 13] := 'IDA';
-  IDA := (IDAslots.rowUsage(0) / 6) - IDAAverage;
+  if IDASlots.DateTime[0,0] > encodeDate(2023, 11, 1) then
+    IDA := 0
+  else
+    IDA := (IDAslots.rowUsage(0) / 6) - IDAAverage;
   stringGrid1.Cells[8, 1]  := currtostr(IDAslots.rowUsage(0));
   stringGrid1.Cells[1, 13] := currtostr(IDA);
   Usage := SSslots.rowUsage(0);
