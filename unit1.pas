@@ -236,6 +236,8 @@ begin
     edit2.Text := paramstr(2);
   if paramcount > 2 then
     edit3.Text := paramstr(3);
+  if paramcount > 3 then
+    edit6.Text := paramstr(4);    
   SavingSessionEvent.RoundTo := encodeTime(0, 30, 0, 0);
   setFont;
 end;
