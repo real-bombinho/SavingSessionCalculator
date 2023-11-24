@@ -220,7 +220,7 @@ begin
   DefaultFormatSettings.ShortDateFormat := 'dd/mm/yyyy';
   DefaultFormatSettings.LongTimeFormat := 'hh:mm';
   DefaultFormatSettings.DateSeparator := '/';
-  Sessions := TSessions.Create('https://api.dudas.in/savingsessionjson.php');
+  Sessions := TSessions.Create('https://api.dudas.energy/savingsessionjson.php');
   memo1.Text := Sessions.Response;
   if not Sessions.isEmpty then
     Sessions.SavingSessionDays(ListBox1.Items);
