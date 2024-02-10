@@ -71,22 +71,26 @@ type
     FData: array of array of REventSlot;
     procedure SetUsage(const col, row: integer; AValue: currency);
   private
+    FEarliest: tDateTime;
     FSlotsInUse: integer;
     FFrom, FTill: tDateTime;
+    function getColCount: integer;
     function GetDateTime(const col, row: integer): tCustomDateTime;
+    function getRowCount: integer;
     function getRowUsage(const row: integer): currency;
-    function GetTimeStr(const col, row: integer): string;
     function GetUsage(const col, row: integer): currency;
     procedure SetDateTime(const col, row: integer; AValue: tCustomDateTime);
     function getColUsage(const col: integer): currency;
     function outOfBounds(const col, row: integer): boolean;
   public
     property DateTime[const col, row: integer]: tCustomDateTime read GetDateTime write SetDateTime;
-    property TimeStr[const col, row: integer]: string read GetTimeStr;
     property Usage[const col, row: integer]: currency read GetUsage write SetUsage;
     property ColumnUsage[const col: integer]: currency read getColUsage;
     property RowUsage[const row: integer]: currency read getRowUsage;
     property SlotCount: integer read FSlotsInUse;
+    property ColCount: integer read getColCount;
+    property RowCount: integer read getRowCount;
+    property Earliest: tDateTime read FEarliest;
     procedure Clear;
     procedure setConsecutiveTimeslots(const row: integer; const firstColumn: tDatetime;
       const count: integer); overload;
@@ -106,7 +110,6 @@ type
     procedure SetUsage(const col, row: integer; AValue: currency);
   private
     FStringGrid: TStringGrid;
-    FEarliest: tDateTime;
     FPrecision: array of byte;
     FPrecisionTotal: byte;
     function getPrecision(const col: integer): byte;
@@ -123,7 +126,6 @@ type
     constructor Create(AStringGrid: TStringGrid; const Precision: byte = 3);
     property StringGrid: TStringGrid read FStringGrid;
     property Usage[const col, row: integer]: currency read GetUsage write SetUsage;
-    property Earliest: tDateTime read FEarliest;
     property Precision[const col: integer]: byte read getPrecision write setPrecision;
     property PrecisionTotal: byte read FPrecisionTotal write setPrecisionTotal;
   end;
@@ -205,8 +207,6 @@ procedure TEventSlotsDisplay.setConsecutiveTimeslots(const row: integer;
 var i, r: integer;
 begin
   inherited setConsecutiveTimeslots(row, firstColumn, count);
-  if (FEarliest = 0) or (FEarliest > firstColumn) then
-    FEarliest := firstColumn;
   if row = 0 then
   begin
     for i := low(FData) to high(FData) do
@@ -247,7 +247,6 @@ begin
     begin
       FStringGrid.Cells[i, j] := '';
     end;
-  FEarliest := 0;
 end;
 
 constructor TEventSlotsDisplay.Create(AStringGrid: TStringGrid; const Precision: byte);
@@ -262,7 +261,6 @@ begin
   inherited Create(c, i);
   SetLength(FPrecision, c);
   FStringGrid := AStringGrid;
-  FEarliest := 0;
   //showmessage('Created ' + inttostr(AStringGrid.ColCount - 3) + ', ' +
   for i := low(FPrecision) to high(FPrecision) do
     FPrecision[i] := Precision;
@@ -277,20 +275,17 @@ begin
     result.DateTime := FData[col, row].dateTime;
 end;
 
+function TEventSlots.getRowCount: integer;
+begin
+  result := high(FData[0]) + 1;
+end;
+
 function TEventSlots.getRowUsage(const row: integer): currency;
 var c: integer;
 begin
   result := 0;
   for c := 0 to high(FData) do
     result := result + FData[c, row].usage;
-end;
-
-function TEventSlots.GetTimeStr(const col, row: integer): string;
-begin
-  if not outOfBounds(col, row) then
-    result := timeToStr(FData[col, row].dateTime)
-  else
-    result := '???';
 end;
 
 function TEventSlots.GetUsage(const col, row: integer): currency;
@@ -321,6 +316,11 @@ begin
   end;
 end;
 
+function TEventSlots.getColCount: integer;
+begin
+  result := high(FData) + 1;
+end;
+
 function TEventSlots.outOfBounds(const col, row: integer): boolean;
 begin
   result := false;
@@ -345,6 +345,7 @@ begin
   FSlotsInUse := 0;
   FFrom := 0;
   FTill := 0;
+  FEarliest := 0;
 end;
 
 procedure TEventSlots.setConsecutiveTimeslots(const row: integer;
@@ -353,6 +354,8 @@ var c: integer;
     t: TDateTime;
 begin
   t := firstColumn;
+  if (FEarliest = 0) or (FEarliest > t) then
+    FEarliest := t;
   if FSlotsInUse < count then FSlotsInUse := count;
   for c := 0 to count - 1 do
   begin
