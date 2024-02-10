@@ -2,7 +2,7 @@ unit Octopus;
 {$modeSwitch advancedRecords}
 interface
 
-uses SysUtils, DateUtils, Classes, EventSlots;
+uses SysUtils, DateUtils, Classes;
 
 const
   OctopusURL = 'https://api.octopus.energy/';
