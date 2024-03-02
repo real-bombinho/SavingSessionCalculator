@@ -50,6 +50,10 @@ type
 
 implementation
 
+BHengland_and_wales: array of RBankHoliday;
+BHscotland: array of RBankHoliday;
+BHnorthern_ireland: array of RBankHoliday;
+
 { RDate }
 
 function RDate.getDateTime: tDateTime;
