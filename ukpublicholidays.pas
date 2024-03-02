@@ -12,6 +12,15 @@ type
 
    UKBankHolidays = (NewYear, GoodFriday, EasterMonday, EarlyMayHoliday, MayBankHoliday, SummerBankHoliday, ChristmasDay, BoxingDay);
 
+{RBankHoliday}
+
+  RBankHoliday = record
+    title: string;
+    date: tDateTime;
+    notes: string;
+    bunting: boolean;
+  end;     
+
 { RDate }
 
   RDate = record
