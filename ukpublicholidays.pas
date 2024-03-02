@@ -46,13 +46,15 @@ type
     function isLeapYear: boolean;
     function BankHoliday(AHoliday: UKBankHolidays; const AYear: word = 0): RDate;
     function isWeekend: boolean;
+    function isClockChangeDay: boolean;
   end;
 
 implementation
 
-BHengland_and_wales: array of RBankHoliday;
-BHscotland: array of RBankHoliday;
-BHnorthern_ireland: array of RBankHoliday;
+var
+  BHengland_and_wales: array of RBankHoliday;
+  BHscotland: array of RBankHoliday;
+  BHnorthern_ireland: array of RBankHoliday;
 
 { RDate }
 
@@ -232,6 +234,17 @@ function RDate.isWeekend: boolean;
 begin
   result := weekday in [6, 7];
 end;
+
+function RDate.isClockChangeDay: boolean;      //last Sunday of March or October
+var d: byte;
+begin
+  result := false;
+  if (month <> 3) or (month <> 10) then exit;
+  d := 31;
+  while DayOfWeek(encodeDate(Year, Month, d)) <> 1 do
+    dec(d);
+  if d = day then result := true;
+end;           
 
 end.
 
